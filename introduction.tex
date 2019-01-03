@@ -1,0 +1,204 @@
+\vspace{-2ex}
+\section{Introduction}
+In the de facto traditional compilation model, all source files of a program are
+compiled with a single set of compiler flags, typically O2 or O3.
+However, it is well-known that O2/O3 may not generate the most
+performant executables~\cite{Chen:2010:EIO:1806596.1806647}. This is
+because optimizations enabled by flags such as O2/O3 are empirically
+determined to maximize performance for certain benchmark suites, while
+other programs and architectural platforms may have different
+characteristics that require other optimizations.  As a result, for a
+given program, several other compiler flag combinations may exist that
+can produce more performant executables than the default O2/O3 choice.
+
+In order to identify the most suitable optimizations for a program,
+researchers have proposed several iterative compilation
+techniques~\cite{iterativecompilation,1191546,1611551}, such as
+compiler flag selection~\cite{Chen:2010:EIO:1806596.1806647,Cavazos:2007:RSG:1251974.1252540,Vaswani:2007:MSE:1251974.1252536}
+and phase ordering construction~\cite{Kulkarni:2004:FSE:996841.996863,Nobre:2016:GIC:2907950.2907959,6662511}.  Given a program, iterative
+compilation first generates code variants by compiling the source code
+with different compiler flags, and then evaluates their performance
+either by execution~\cite{1611551,Chen:2010:EIO:1806596.1806647} or
+prediction~\cite{Cavazos:2007:RSG:1251974.1252540,cere}.
+
+% their limitations: search algorithm(greedy) and model construction (machine learning), granularity consideration.
+%auto-tuning is a more general term than compiler flag selection and phase-ordering.
+Several search-based algorithms have been proposed for generating
+compiler flag combinations to create code variants, e.g. predictive machine
+learning models~\cite{Cavazos:2007:RSG:1251974.1252540} and
+optimization flag correlation-based combined elimination
+\cite{1611551}, both of which treat random search
+\cite{Chen:2010:EIO:1806596.1806647,opentuner,1611551} as their
+baselines.  However, the effectiveness of these methods is limited.
+While machine learning based predictive models
+\cite{Cavazos:2007:RSG:1251974.1252540} perform well on small training
+datasets, a recent study~\cite{FursinMGL15} \eat{employing
+  crowd-sourcing compilation} shows that their prediction accuracy
+drops dramatically for large-scale datasets and exhibits close to
+random behavior.  This indicates that the success of predictive models
+on small training sets cannot be easily generalized.
+%, which raises concern of their fundamental validity.
+
+%On the other hand,
+%the state-of-the-art search-based algorithm
+Combined elimination (CE)~\cite{PanE06, Pan:2008:taco} takes advantage
+of interactions among compiler flags to find the best combination.
+However, our evaluation of CE, shown in \Cref{fig:ce}, for three benchmarks on
+Intel's Broadwell architecture shows minimal performance benefit in
+comparison to the O3 baseline for both the GNU C/C++ compiler (GCC
+release 5.4.0) and the Intel C/C++ compiler (ICC release 17.0.4).
+
+\begin{figure}[h]
+\includegraphics[width=\linewidth]{gnuplot_temp/intro.pdf}
+\caption{Combined Elimination does not improve performance significantly.}
+\label{fig:ce}
+\end{figure}
+
+%
+A closer inspection of the experiments for CE revealed that it can
+be limited by the results for local minima.  Further, the time
+complexity of CE is $O(n^2)$, where $n$ is the number of O3 flags. The
+quadratic complexity limits the use of CE for newer GCC versions such
+as 5.4.0, which have more than 200 binary optimization flags and 170
+multi-valued parameters.  In this work, we address the challenge of
+a large search space by employing a novel search space focusing
+technique to guide random search.
+
+%In~\cite{PanE06, Pan:2008:taco}, GCC 3.3.3 was evaluated and it has only 38 binary (on/off) options, but it can be much slower for modern GCC, e.g., release 5.4.0, which has more than 200 binary optimization flags and 170 multi-valued parameters.
+%In brief, the-state-of-the-art CE is not only time-consuming but also often cannot guarantee performance improvements, as shown in \Cref{fig:ce}.
+%coarse-grained random algorithm and fine-grained greedy
+%
+Fine-grained per-region compilation techniques~\cite{Pan:2008:taco,
+  cere, chill, poet} divide a program into different compilation modules and
+optimize each separately. 
+%
+Specifically, source-code level auto-tuners~\cite{chill, poet} focus
+on a single simple computation kernel without considering module
+interactions in real-world applications. As prior work in compiler flag
+selection~\cite{Pan:2008:taco, cere} also assumes that compilation
+modules are independent, they assemble an optimized executable by
+greedily picking the best code variant of each module. However, the
+modules of a program may not be independent due to cross-module
+interference, such as shared data structures and link-time
+inter-procedural optimizations~\cite{lto, lto2} across multiple
+modules.  In particular, link-time optimizations can drive
+optimization decisions, such as \emph{loop unrolling}, and may
+invalidate earlier transformations that were made independently for
+the compilation modules.
+
+{\bf Contributions:}
+%
+Based on the observations above, we develop a fine-grained auto-tuning
+framework, \toolname, that targets modern scientific applications.
+%added by Frank
+Our overall objective is to extract the best performance out of an
+application that is executed repeatedly, such as in high-performance
+computing (HPC) where scientists test their hypotheses in experiments
+repeatedly with similar inputs using the same algorithms. 
+%
+To clarify, we {\em neither} attempt to derive a better set of
+optimizations for O3, nor do we attempt to generalize a specific set
+of optimizations across region boundaries or select different
+algorithmic code variants according to input characteristics (in
+contract to ~\cite{jiajia,yeom}). Instead, our objective is to 1)
+assess whether or not there are module interactions and, if so, 2)
+understand how to capitalize on such interactions.
+
+Our target HPC applications exploit multi-core parallelism via OpenMP~\cite{OpenMP}.
+Their hot-spots consist of OpenMP loops that account for a significant
+fraction of execution time. \toolname outlines these loops and
+converts them into individual functions, whose compilation can be
+auto-tuned.  To this end, \toolname employs a novel and effective
+search space focusing technique to guide random search based
+compilation auto-tuning.
+
+%\todo{abstract talks about profiling but not this technique; i think we should say both things in both places.} {changed. Not sure whether it's better.}
+%todo{Also, we should mention the search space work earlier when discussing other techniques}{You mean per-region compilation? the advantage is that we want to use it as a direct motivator. If we move it earlier, the transition would be a problem.}
+%Our evaluations show that \toolname achieves up to 18.1\% higher
+%performance using region-specific optimizations than global O3 flags
+%on a set of scientific benchmarks run on several generations of HPC
+%architectures.
+The contributions of this paper are:
+\begin{itemize}
+%[leftmargin=6.5mm]
+\item We develop a fine-grained per-loop compiler flag selection
+  framework, \toolname, that combines program profiling~\cite{caliper}
+  % source code transformation, Caliper~\cite{caliper} low-overhead
+  % timing infrastructure,
+  and search space focusing algorithms to tune hot kernel loops of
+  modern scientific programs simultaneously without sacrificing the
+  optimization context for production compilers.
+  % \todo{too many keywords: also what is source code transformation?
+  % i think we can just say light-weight profiling and search space
+  % algorithm}
+\item We demonstrate that \toolname is able to improve program
+  performance for a set of scientific benchmarks by 9.3\% to 10.3\% in
+  comparison to the O3 baseline and 4.6\% to 5.6\% relative to prior work,
+  both in geometric mean, on several generations of HPC architecture.
+%
+  %Our \toolname further has the potential to improve machine learning
+  %based predictive modeling techniques in the future.
+  % \todo{not sure what the potential ML bit is? Can we claim beyond
+  % state of the art?} {Previous work show ML never beats random
+  % search in terms of program performance improvement}.
+\item We conduct an in-depth case study for the Intel compiler tool chain to
+  show how fine-grained compiler
+  flag selection affects inter-module dependencies and demonstrate
+  that it should not be performed greedily, but rather in a focused and targeted manner.
+%\todo{is there something specific to Intel? If not, why mention that} {Yes. xiar and xild must be used, and they are not part of ICC}
+\end{itemize}
+
+Our \toolname implementation automates these steps, with the
+exception of profile instrumentation and collection of timing results,
+which are manual in our research prototype, but could be automated
+with further engineering effort invested (but are of no research value).
+
+% Paper organization
+\iffalse
+\todo{I dont think this is useful}
+Section \ref{design} first defines terminologies and notations used in this paper, after which \toolname framework and work flow design considerations are explained.
+Section \ref{experiment design} gives a brief overview of all experimental settings, such as benchmarks, platforms, and measurement methodology.
+The overall tuning results for our benchmark suite are presented in section \ref{results and analysis} to show the effectiveness of \toolname.
+Related work is discussed in section \ref{related work}.
+Section \ref{conclusion} summarizes this paper and discusses work in detail future work.
+
+iterative compilation~\cite{iterativecompilation, 1191546, 1611551} to search  space of . and auto-tuners~\cite{activeHarmony, opentuner, Zhang:2012:AAS:2259016.2259037}, to take
+
+Motivating example: vectorization or not, to show per-loop compilation may be useful. Can also extract motivation from Peak~\cite{Pan:2008:taco}.
+
+Contribution:
+
+Research questions:
+\begin{enumerate}
+\item granularity: how to split code
+\item stability/sensitivity: R, FR, CFR
+\item Effectiveness
+\end{enumerate}
+
+Use LULESH as an example for in-depth analysis
+\begin{enumerate}
+\item why CFR is better than G.realized
+\item why CFR is not as good as G.expected
+\item Is G.expected a tight upper bound?
+\end{enumerate}
+
+Experimental evaluation:
+\begin{enumerate}
+\item LULESH
+\item Cloverleaf
+\item AMG
+\end{enumerate}
+
+Discussion:
+
+Iterative compilation is a very important compiler-based auto-tuning technology to improve program performance. Search space is too large for exhaustive enumeration. The critical limitation of the state-of-the-art is lack of knowledge of interactions among different compilation flags. It is challenging to automatically derive compiler flag interactions.
+
+Runtime parameter auto-tuning is another effective techniques to improve program performance. Application self-tuning, library auto-tuning, compiler-based code variant tuning. Previous work does not combine iterative compilation and runtime parameter tuning together.
+
+Two possible contributions:
+\begin{enumerate}
+\item automatically extract compiler flag interactions to reduce space search overhead.
+\item combine compile-time and runtime tuning.
+\end{enumerate}
+\fi
+

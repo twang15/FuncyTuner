@@ -1,0 +1,18 @@
+The de facto compilation model for production software compiles all
+modules of a target program with a single set of compilation flags,
+typically \emph{O2} or \emph{O3}. Such a per-program compilation
+strategy may yield sub-optimal executables since programs tend to have
+multiple hot loops with diverse code structures and can be further
+optimized using targeted compilation flags. An alternative to the
+per-program compilation model is a per-region compilation model that
+assembles an optimized executable by combining the best per-region code variants.
+
+In this paper, we demonstrate that a na\"ive greedy approach to per-region
+compilation often degrades performance in comparison to the \emph{O3} baseline.
+To overcome this problem, we contribute a novel per-loop compilation framework,
+\toolname, which employs light-weight profiling to collect per-loop
+timing information, and then utilizes a space-focusing technique to construct a
+performant executable. Experimental results show that \toolname can reliably
+improve performance of modern scientific applications on several
+multi-core architectures by 10.3\% and 5.6\% (geometric mean) in
+comparison to the \emph{O3} baseline and prior work, respectively.
