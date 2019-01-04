@@ -5,6 +5,39 @@
 \documentclass[runningheads]{llncs}
 %
 \usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{listings}
+\usepackage{url}
+\usepackage{float}
+\usepackage{subfig}
+\floatstyle{plaintop}
+\restylefloat{table}
+\usepackage{ctable}
+\usepackage{tabularx}
+\usepackage{tabu}
+\usepackage{spreadtab}
+\usepackage{multirow}
+\usepackage{showexpl}
+\usepackage{graphicx}
+\usepackage{enumitem}
+\usepackage[]{hyperref}
+\usepackage{textcomp}
+\usepackage{verbatim}
+\usepackage[]{hyperref}
+\usepackage{cleveref}
+\usepackage{enumitem}
+\usepackage{color}
+\usepackage{arydshln}
+\usepackage{xspace}
+\newcommand{\subscript}[2]{$#1 _ #2$}
+\usepackage[ruled,vlined,linesnumbered,noend]{algorithm2e}
+\usepackage{siunitx,booktabs,threeparttable}
+\usepackage{cleveref}
+\Crefname{algocf}{Algorithm}{Algorithms}
+\lstdefinelanguage{example}{
+  morekeywords={for},
+}
+
 %\usepackage[numbers,sort&compress]{natbib}
 %\renewcommand\bibname{References}
 %https://tex.stackexchange.com/questions/359355/lncs-bibliography-format
@@ -21,6 +54,7 @@
 \renewcommand{\bibsection}{\section*{References}}
 
 \usepackage[margin=1in,footskip=0.25in]{geometry}
+
 % Used for displaying a sample figure. If possible, figure files should
 % be included in EPS format.
 %
@@ -69,6 +103,13 @@ Lawrence Livermore National Laboratory\\
 %
 %
 \input{introduction.tex}
+\input{Design.tex}
+\input{experiments.tex}
+\input{results.tex}
+\input{related_work.tex}
+\input{conclusion.tex}
+
+\if 0
 \section{First Section}
 \subsection{A Subsection Sample}
 Please note that the first paragraph of a section or subsection is
@@ -117,6 +158,7 @@ Fig.~\ref{fig1}).
 Please note that short captions are centered, while long ones are
 justified by the macro package automatically.} \label{fig1}
 \end{figure}
+\fi
 
 \if 0
 \begin{theorem}

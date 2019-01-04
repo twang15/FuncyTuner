@@ -1,0 +1,21 @@
+\section{Conclusion} \label{conclusion}
+
+% approach and effectiveness
+In this work, we presented a fine-grained per-loop compiler flag
+selection framework, \toolname, that combines program profiling and
+search space focusing algorithms to improve performance of parallelized
+scientific programs, in which different code regions/loops may be optimized
+with different flags.  Our experimental evaluation shows that
+\toolname's Caliper-guided Random Search (CFR) effectively utilizes
+collected per-loop runtimes to focus the search on performant program
+compilation configurations.
+%and is able to tolerate measurement errors.
+\toolname achieves a 9.2\% to 10.3\% (geometric mean) performance improvement
+in comparison to O3 baseline, outperforms state-of-the-art random search
+algorithms by 4.6\% to 5.6\%, and is better than machine-learning based approaches by 4.6\%.
+%which also has the potential to improve future predictive modeling techniques.
+We also showed that greedily picking the per-loop best compilation vectors often
+degrades program performance due to complex inter-module dependencies, and
+fine-grained random search without guidance of runtime information does not
+guarantee performance improvements.
+% insight and take-away
